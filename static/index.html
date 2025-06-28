@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sonic SizeBot - Enhanced AI Size Predictor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #0a74da 0%, #00c3ff 50%, #1e3c72 100%);
+      font-family: 'Comic Sans MS', 'Arial', sans-serif;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+    
+    .header {
+      text-align: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .header h1 {
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 1.2em;
+      opacity: 0.9;
+    }
+    
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 20px;
+      overflow-y: auto;
+      max-height: calc(100vh - 200px);
+    }
+    
+    .bubble {
+      max-width: 80%;
+      margin-bottom: 15px;
+      padding: 15px 20px;
+      border-radius: 20px;
+      word-wrap: break-word;
+      animation: pop 0.3s ease;
+      position: relative;
+    }
+    
+    .user-bubble {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #fdee00, #ffd700);
+      color: #000;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(253, 238, 0, 0.3);
+    }
+    
+    .bot-bubble {
+      align-self: flex-start;
+      background: linear-gradient(135deg, #fff, #f0f8ff);
+      color: #000;
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+    }
+    
+    .bot-bubble.loading {
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+      color: #fff;
+    }
+    
+    .size-result {
+      background: linear-gradient(135deg, #4ecdc4, #44a08d);
+      color: #fff;
+      font-size: 1.1em;
+      padding: 20px;
+      border-radius: 15px;
+      margin: 10px 0;
+      box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+    }
+    
+    .confidence-bar {
+      background: rgba(255, 255, 255, 0.2);
+      height: 8px;
+      border-radius: 4px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+    
+    .confidence-fill {
+      background: linear-gradient(90deg, #fdee00, #ffd700);
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    
+    .size-probabilities {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+    
+    .size-prob {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.9em;
+    }
+    
+    .size-prob.highest {
+      background: linear-gradient(135deg, #fdee00, #ffd700);
+      color: #000;
+      font-weight: bold;
+    }
+    
+    @keyframes pop {
+      0% { 
+        transform: scale(0.8) translateY(20px); 
+        opacity: 0; 
+      }
+      100% { 
+        transform: scale(1) translateY(0); 
+        opacity: 1; 
+      }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .loading-dots {
+      animation: pulse 1.5s infinite;
+    }
+    
+    .input-container {
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(15px);
+      border-top: 2px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 25px;
+      padding: 5px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .input-wrapper input {
+      flex: 1;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 20px;
+      font-size: 16px;
+      color: #333;
+      background: transparent;
+      outline: none;
+    }
+    
+    .input-wrapper input::placeholder {
+      color: #666;
+    }
+    
+    .send-button {
+      background: linear-gradient(135deg, #fdee00, #ffd700);
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      margin-left: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #000;
+      font-size: 18px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(253, 238, 0, 0.3);
+    }
+    
+    .send-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(253, 238, 0, 0.5);
+    }
+    
+    .send-button:active {
+      transform: scale(0.95);
+    }
+    
+    .examples {
+      margin-top: 15px;
+      text-align: center;
+    }
+    
+    .example-button {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    .example-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    
+    .brand-info {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 10px;
+      margin: 10px 0;
+      font-size: 0.9em;
+    }
+    
+    .error-message {
+      background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+      color: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 10px 0;
+    }
+    
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2em;
+      }
+      
+      .bubble {
+        max-width: 90%;
+      }
+      
+      .size-probabilities {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🦔 Sonic SizeBot</h1>
+    <p>AI-Powered Clothing Size Predictor</p>
+  </div>
+  
+  <div class="chat-container" id="chat">
+    <div class="bubble bot-bubble">
+      <strong>Hey there! I'm Sonic SizeBot! 🌀</strong><br>
+      Tell me your height, weight, and which brand you're shopping at, and I'll predict your perfect size!<br><br>
+      <em>Try saying something like: "I'm 5'8, 150 lbs, shopping at Zara"</em>
+    </div>
+  </div>
+  
+  <div class="input-container">
+    <div class="input-wrapper">
+      <input 
+        type="text" 
+        id="userInput" 
+        placeholder="Tell me your measurements and brand..." 
+        onkeypress="handleKeyPress(event)"
+      />
+      <button class="send-button" onclick="sendMessage()">⚡</button>
+    </div>
+    
+    <div class="examples">
+      <button class="example-button" onclick="useExample('I am 5 feet 8 inches, 150 lbs, looking for clothes at Zara')">
+        5'8, 150 lbs, Zara
+      </button>
+      <button class="example-button" onclick="useExample('170cm, 65kg, shopping at H&M')">
+        170cm, 65kg, H&M
+      </button>
+      <button class="example-button" onclick="useExample('I am 5 feet 6 inches, 140 pounds, need size for Uniqlo')">
+        5'6, 140 lbs, Uniqlo
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let isProcessing = false;
+
+    async function sendMessage() {
+      if (isProcessing) return;
+      
+      const input = document.getElementById("userInput");
+      const message = input.value.trim();
+      if (!message) return;
+      
+      isProcessing = true;
+      addBubble(message, "user");
+      input.value = "";
+      
+      const loadingBubble = addBubble(
+        '<span class="loading-dots">🌀 Spin-dashing through the data...</span>', 
+        "bot loading"
+      );
+
+      try {
+        const response = await fetch("/predict-natural", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({message: message}),
+        });
+        
+        const data = await response.json();
+        
+        // Remove loading bubble
+        loadingBubble.remove();
+        
+        if (data.success) {
+          displaySizeResult(data);
+        } else {
+          displayError(data.errors, data.suggestion);
+        }
+        
+      } catch (error) {
+        loadingBubble.remove();
+        addBubble(
+          '<div class="error-message">Oops! Sonic tripped over a chaos emerald! 💎<br>Please try again.</div>', 
+          "bot"
+        );
+      }
+      
+      isProcessing = false;
+    }
+
+    function displaySizeResult(data) {
+      const resultHtml = `
+        <div class="size-result">
+          <h3>🎯 Perfect Size Found!</h3>
+          <p><strong>Brand:</strong> ${data.brand}</p>
+          <p><strong>Recommended Size:</strong> <span style="font-size: 1.5em; font-weight: bold;">${data.recommended_size}</span></p>
+          <p><strong>Confidence:</strong> ${Math.round(data.confidence * 100)}%</p>
+          
+          <div class="confidence-bar">
+            <div class="confidence-fill" style="width: ${data.confidence * 100}%"></div>
+          </div>
+          
+          <div class="brand-info">
+            <strong>📏 Your Measurements:</strong><br>
+            Height: ${data.parsed_measurements.height} | Weight: ${data.parsed_measurements.weight}<br>
+            Chest: ${data.parsed_measurements.chest} | Waist: ${data.parsed_measurements.waist} | Hips: ${data.parsed_measurements.hips}
+          </div>
+          
+          <div class="size-probabilities">
+            ${Object.entries(data.size_probabilities)
+              .sort(([,a], [,b]) => b - a)
+              .map(([size, prob]) => `
+                <div class="size-prob ${prob === data.confidence ? 'highest' : ''}">
+                  <div style="font-weight: bold;">${size}</div>
+                  <div>${Math.round(prob * 100)}%</div>
+                </div>
+              `).join('')}
+          </div>
+        </div>
+      `;
+      
+      addBubble(resultHtml, "bot");
+      
+      // Add follow-up message
+      setTimeout(() => {
+        addBubble(
+          "Need another size prediction? Just tell me your measurements and brand! 🌟", 
+          "bot"
+        );
+      }, 1000);
+    }
+
+    function displayError(errors, suggestion) {
+      const errorHtml = `
+        <div class="error-message">
+          <strong>Oops! I need more info! 🤔</strong><br>
+          ${errors.map(error => `• ${error}`).join('<br>')}<br><br>
+          <em>${suggestion}</em>
+        </div>
+      `;
+      
+      addBubble(errorHtml, "bot");
+    }
+
+    function addBubble(text, type) {
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${type}-bubble`;
+      bubble.innerHTML = text;
+      document.getElementById("chat").appendChild(bubble);
+      
+      // Scroll to bottom
+      const chatContainer = document.getElementById("chat");
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      
+      return bubble;
+    }
+
+    function useExample(text) {
+      document.getElementById("userInput").value = text;
+      sendMessage();
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    }
+
+    // Initialize with a friendly message
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        addBubble(
+          "✨ I support multiple brands: Zara, H&M, Uniqlo, Gap, Old Navy, and Shein!<br>Each brand has different sizing, so I'll give you the most accurate prediction! 🎯", 
+          "bot"
+        );
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
