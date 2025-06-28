@@ -19,20 +19,19 @@ class NaturalLanguageProcessor:
         Estimate chest, waist, and hips based on height and weight
         Using realistic body proportion formulas
         """
-        # Basic BMI calculation
         bmi = weight_kg / ((height_cm / 100) ** 2)
         
         # Estimation formulas (these are approximations)
         # For larger people, proportions change
-        if bmi < 25:  # Normal weight
+        if bmi < 25: 
             chest = height_cm * 0.52 + weight_kg * 0.3
             waist = height_cm * 0.42 + weight_kg * 0.4
             hips = height_cm * 0.54 + weight_kg * 0.35
-        elif bmi < 30:  # Overweight
+        elif bmi < 30:
             chest = height_cm * 0.54 + weight_kg * 0.35
             waist = height_cm * 0.45 + weight_kg * 0.5
             hips = height_cm * 0.56 + weight_kg * 0.4
-        else:  # Obese
+        else:
             chest = height_cm * 0.56 + weight_kg * 0.4
             waist = height_cm * 0.48 + weight_kg * 0.6
             hips = height_cm * 0.58 + weight_kg * 0.45
